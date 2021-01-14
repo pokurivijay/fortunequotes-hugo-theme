@@ -1,12 +1,192 @@
 {{ partial "header" . }}
 
 <main>
-    <div class="intro">
+    <div class="">
         {{ with .Site.Params.profilePic }} <img class="profile" src="{{ . }}"> {{ end }}
-        <h1>{{ .Site.Title }}</h1>
-        <h2>{{ markdownify .Site.Params.Description }}</h2>
+        <h3>{{ .Site.Title }}</h3>
+        <h6>{{ markdownify .Site.Params.Description }}</h6>
         {{ with .Content }} <div class="homepage-content text-justify">{{ . }}</div> {{ end }}
+        <div class="" style="padding: 2rem;">
+            <div class="section">
+                <div class="row">
+                <div class="col-md-12">
+                    <p>Stocks For <strong> <span id="date" style="background-color:yellow; font-size: medium;">...</span>  </strong></p>
+                </div>
+                
+                </div>
+              </div>
+              <hr>
+        <div class="table-responsive">
+        <table class="table">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col"></th>
+                <th scope="col">Instrument</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Order</th>
+                <th scope="col">Closing Price</th>
+                <th scope="col">Product</th>
+                <th scope="col">Validity</th>
+                <th scope="col">Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">1</th>
+                <td id="transaction_type_1">BUY</td>
+                <td id="instrument_1">SBIN</td>
+                <td id="quantity_1">100</td>
+                <td>Market</td>
+                <td id="price_1">Colsing Price</td>
+                <td>MIS</td>
+                <td>DAY</td>
+                <td>AMO</td>
+              </tr>
+              <tr>
+                <th scope="row">2</th>
+                <td id="transaction_type_2">BUY</td>
+                <td id="instrument_2">SBIN</td>
+                <td id="quantity_2">200</td>
+                <td>Market</td>
+                <td id="price_2">Colsing Price</td>
+                <td>MIS</td>
+                <td>DAY</td>
+                <td>AMO</td>
+              </tr>
+              <tr>
+                <th scope="row">3</th>
+                <td id="transaction_type_3">BUY</td>
+                <td id="instrument_3">SBIN</td>
+                <td id="quantity_3">300</td>
+                <td>Market</td>
+                <td id="price_3">Colsing Price</td>
+                <td>MIS</td>
+                <td>DAY</td>
+                <td>AMO</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          <hr>
+          <div class="row">
+          <div class="col-md-7">
+            <form class="form-inline" onsubmit="myFunction()">
+              <div class="form-group">
+                  <label for="capital">Capital</label>
+                  <input type="number" class="form-control" id="capital" name="capital" placeholder="300000" value="300000">
+                </div>
+                <div class="form-group">
+                  <button type="submit" class="btn btn-default">Update</button>
+                  </div>
+              <!-- <label for="capital">Capital: </label>
+              <input type="number" id="capital" name="capital" value="300000" style="width: 90px;">
+              <input type="submit" class="btn btn-default" value="Submit"> -->
+            </form> 
+          </div>
+          <div class="col-md-1">
+            
+          </div>
+          <div class="col-md-3">
+            <button type="button" id="order-button" class="btn btn-danger">Place Order with Zerodha</button> 
+          </div>
+        </div>
+        <hr>
+        <div class="alert alert-warning">
+          <strong>Instructions:</strong> Place Orders Before 9:00 AM <span id="date2"></span> and Close your orders at 1% Profit ( ₹ <span id="profit">3000</span> /- )
+        </div>
+      </div>
     </div>
 </main>
+
+<!-- Include the plugin //-->
+<script src="https://kite.trade/publisher.js?v=3"></script>
+
+<script>
+  function myFunction() {
+    
+    // alert(totalCapital);
+    event.preventDefault();
+    getData()
+  }
+</script>
+
+<script>
+getData()
+
+function getData(){
+
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var response = JSON.parse(this.responseText);
+      var data = response.data;
+
+      document.getElementById('date').innerHTML = response.date;
+      document.getElementById('date2').innerHTML = response.date;
+
+      // document.getElementById("demo").innerHTML = myArr[0];
+    //   console.log(data);
+
+
+      KiteConnect.ready(function() {
+      // Initialize a new Kite instance.
+      // You can initialize multiple instances if you need.
+      var kite = new KiteConnect("uvfwukxsydg341xt");
+
+      // console.log(myArr);
+
+      data.forEach(addStocks)
+
+      function addStocks(item, index, arr) {
+
+        // var lot_size = response.lot_size;
+        var totalCapital = document.getElementById('capital').value;
+        
+        document.getElementById('profit').innerHTML = (totalCapital/100);
+
+        var lot_size = (totalCapital / data.length);
+        var quantity = Math.round(lot_size/item.current_price);
+        
+        document.getElementById('transaction_type_'+ (index+1)).innerHTML = item.transaction_type;
+        document.getElementById('instrument_'+ (index+1)).innerHTML = item.tradingsymbol;
+        document.getElementById('quantity_'+ (index+1)).innerHTML = quantity;
+        document.getElementById('price_'+ (index+1)).innerHTML = item.current_price;
+        
+        
+
+        kite.add({
+          "exchange": item.exchange,
+          "tradingsymbol": item.tradingsymbol,
+          "quantity": quantity,
+          "order_type": item.order_type,
+          "transaction_type": item.transaction_type,
+          "product": item.product,
+          "variety": item.variety,
+        });
+
+      }
+
+      // Register an (optional) callback.
+      // kite.finished(function(status, request_token) {
+      //     alert("Finished. Status is " + status);
+      // });
+
+      // Render the in-built button inside a given target
+    //   kite.renderButton("#default-button");
+
+      // OR, link the basket to any existing element you want
+      kite.link("#order-button");
+  });
+
+    }
+  };
+
+  xmlhttp.open("GET", "https://api.jsonbin.io/b/5ff732b063e86571a2e31642", true);
+  xmlhttp.setRequestHeader("secret-key", "$2b$10$fKryH/vR081wadogYkgepO415yypo.IWbaPSULp3dwr4TkfWe2fk6");
+  xmlhttp.send();
+}
+
+  </script>
 
 {{ partial "footer" . }}
